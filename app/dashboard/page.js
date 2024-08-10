@@ -1,13 +1,16 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { Box, Typography, Button, Fab, AppBar, Toolbar, IconButton, Menu, MenuItem, Avatar, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, TextField } from '@mui/material';
+import { Box, Typography, Button, Fab, AppBar, Toolbar, IconButton, Menu, MenuItem, Avatar, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, TextField, InputBase } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import SearchIcon from '@mui/icons-material/Search';
 import { useRouter } from 'next/navigation';
 
 export default function Dashboard() {
   const [items, setItems] = useState([]);
-  const [editIndex, setEditIndex] = useState(-1);  // State to track the row being edited
+  const [searchTerm, setSearchTerm] = useState('');  // State to hold search query
+  const [searchVisible, setSearchVisible] = useState(false);  // Toggle visibility of the search box
+  const [editIndex, setEditIndex] = useState(-1);
   const [anchorEl, setAnchorEl] = useState(null);
   const router = useRouter();
 
@@ -26,12 +29,12 @@ export default function Dashboard() {
 
   const handleLogout = () => {
     handleMenuClose();
-    router.push('/'); // Redirect to landing page on logout
+    router.push('/');
   };
 
   const handleSave = (index) => {
     localStorage.setItem('items', JSON.stringify(items));
-    setEditIndex(-1); // Exit edit mode
+    setEditIndex(-1);
   };
 
   const handleModify = (index) => {
@@ -50,6 +53,10 @@ export default function Dashboard() {
     localStorage.setItem('items', JSON.stringify(updatedItems));
   };
 
+  const filteredItems = items.filter((item) =>
+    item.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
     <Box sx={{ width: '100vw', minHeight: '100vh', background: 'linear-gradient(135deg, #ff6f61, #ffffff)', position: 'relative' }}>
       {/* Navbar */}
@@ -58,16 +65,29 @@ export default function Dashboard() {
           <Typography variant="h6" component="div">
             Pantry Tracker
           </Typography>
-          <IconButton edge="end" color="inherit" onClick={handleMenuOpen}>
-            <Avatar sx={{ bgcolor: '#ffffff', color: '#ff6f61' }}>P</Avatar>
-          </IconButton>
-          <Menu
-            anchorEl={anchorEl}
-            open={Boolean(anchorEl)}
-            onClose={handleMenuClose}
-          >
-            <MenuItem onClick={handleLogout}>Logout</MenuItem>
-          </Menu>
+          <Box display="flex" alignItems="center">
+            {searchVisible && (
+              <InputBase
+                placeholder="Search..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                sx={{ color: 'white', backgroundColor: '#ff8a75', borderRadius: 1, padding: '0 8px', marginRight: 2 }}
+              />
+            )}
+            <IconButton color="inherit" onClick={() => setSearchVisible(!searchVisible)}>
+              <SearchIcon />
+            </IconButton>
+            <IconButton edge="end" color="inherit" onClick={handleMenuOpen}>
+              <Avatar sx={{ bgcolor: '#ffffff', color: '#ff6f61' }}>P</Avatar>
+            </IconButton>
+            <Menu
+              anchorEl={anchorEl}
+              open={Boolean(anchorEl)}
+              onClose={handleMenuClose}
+            >
+              <MenuItem onClick={handleLogout}>Logout</MenuItem>
+            </Menu>
+          </Box>
         </Toolbar>
       </AppBar>
 
@@ -88,7 +108,7 @@ export default function Dashboard() {
               </TableRow>
             </TableHead>
             <TableBody>
-              {items.map((item, index) => (
+              {filteredItems.map((item, index) => (
                 <TableRow key={index}>
                   <TableCell sx={{ textAlign: 'center' }}>
                     {editIndex === index ? (
@@ -118,7 +138,7 @@ export default function Dashboard() {
                       <Button
                         variant="contained"
                         color="primary"
-                        sx={{ mr: 2 }}  // Increased margin-right for spacing
+                        sx={{ mr: 2 }}
                         onClick={() => handleSave(index)}
                       >
                         Save
@@ -126,7 +146,7 @@ export default function Dashboard() {
                     ) : (
                       <Button
                         variant="contained"
-                        sx={{ mr: 2, backgroundColor: '#ff6f61' }}  // Increased margin-right for spacing
+                        sx={{ mr: 2, backgroundColor: '#ff6f61' }}
                         onClick={() => handleModify(index)}
                       >
                         Modify
